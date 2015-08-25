@@ -1,7 +1,6 @@
 # c24-lei-rest-service
 
-This project is a Swift Validation Service that runs as a Rest Service inside a docker container.
-You can test the syntax and semantics of Swift SR 2015 messages.
+This project demonstrates the use of C24 SDO technology with Hazelcast, Spring and Docker
 
 # Get the project
 
