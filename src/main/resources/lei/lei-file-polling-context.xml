@@ -1,0 +1,79 @@
+<!--
+ | Copyright 2015 C24 Technologies.
+ |
+ | Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+ | to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ | and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ |
+ | The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ |
+ | THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ | FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL C24 TECHNOLOGIES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ | WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ | SOFTWARE.
+ |
+-->
+<beans xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:int-file="http://www.springframework.org/schema/integration/file"
+       xsi:schemaLocation="http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <!-- ======================================================================
+
+         Inbound File Adapter looks for files that match the given regular expression
+         Any files that have already been processed with the same name within the same
+         JVM session will be ignored
+
+         ====================================================================== -->
+
+    <!-- ################# START INTEGRATION FLOW COMPONENTS ################## -->
+
+    <!-- ======================================================================
+         1. Poll for Inbound files
+         ====================================================================== -->
+    <int-file:inbound-channel-adapter directory="#{leiReadDirectory.path}"
+                                      filename-regex="${lei.filename.regex}"
+                                      prevent-duplicates="true"
+                                      channel="lei-file-polling-channel"
+                                      id="leiFileChannelAdaptor" auto-create-directory="false">
+        <int:poller ref="leiFilePoller"/>
+    </int-file:inbound-channel-adapter>
+
+
+    <!-- ################# END INTEGRATION FLOW COMPONENTS ################# -->
+
+
+
+    <!-- ################# BEAN DEFINITIONS ################# -->
+
+    <!-- ====================================================================== -->
+    <!-- Poller -->
+    <!-- ====================================================================== -->
+    <int:poller id="leiFilePoller" fixed-delay="${lei.file.poller.fixed.delay}"
+                max-messages-per-poll="${lei.file.poller.max.messages.per.poll}">
+        <int:transactional synchronization-factory="leiFilePollerSyncFactory" transaction-manager="leiTransactionManager"/>
+    </int:poller>
+
+    <!-- ====================================================================== -->
+    <!-- Transaction sync factory that implements actions on commit or rollback -->
+    <!-- ====================================================================== -->
+    <bean id="leiFilePollerSyncFactory" class="org.springframework.integration.transaction.DefaultTransactionSynchronizationFactory">
+        <constructor-arg>
+            <bean class="org.springframework.integration.transaction.ExpressionEvaluatingTransactionSynchronizationProcessor">
+                <property name="afterCommitExpression"
+                          value="#{new org.springframework.expression.spel.standard.SpelExpressionParser().parseExpression('payload.renameTo(new java.io.File(@leiProcessedDirectory.path + ''/'' + payload.name))')}"/>
+                <property name="afterRollbackExpression"
+                          value="#{new org.springframework.expression.spel.standard.SpelExpressionParser().parseExpression('payload.renameTo(new java.io.File(@leiFailedDirectory.path + ''/'' + payload.name))')}"/>
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <bean id="leiTransactionManager" class="org.springframework.integration.transaction.PseudoTransactionManager"/>
+
+
+</beans>

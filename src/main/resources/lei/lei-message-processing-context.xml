@@ -1,0 +1,82 @@
+<!--
+ | Copyright 2015 C24 Technologies.
+ |
+ | Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+ | to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ | and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ |
+ | The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ |
+ | THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ | FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL C24 TECHNOLOGIES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ | WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ | SOFTWARE.
+ |
+-->
+<beans xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:c24="http://schema.c24.biz/spring-core"
+       xmlns:int-c24="http://schema.c24.biz/spring-integration"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:int-file="http://www.springframework.org/schema/integration/file"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+    http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context.xsd
+
+    http://schema.c24.biz/spring-core http://schema.c24.biz/spring-core.xsd
+    http://schema.c24.biz/spring-integration http://schema.c24.biz/spring-integration.xsd
+        http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file.xsd
+    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <context:component-scan base-package="biz.c24.io.lei"/>
+
+
+    <!-- ======================================================================
+
+         Entry point from a Spring batch process
+
+         ====================================================================== -->
+
+    <!-- ################# START INTEGRATION FLOW COMPONENTS ################## -->
+
+    <!-- ======================================================================
+
+     ====================================================================== -->
+    <int:gateway service-interface="biz.c24.io.lei.LeiBatchGateway"
+                 id="leiBatchProcessingGateway"
+                 default-request-timeout="100"
+                 default-request-channel="lei-batch-message-processing-channel"/>
+
+    <int:channel id="lei-batch-message-processing-channel">
+        <int:queue message-store="leiMessageStore"/>
+    </int:channel>
+
+    <bean id="leiMessageStore" class="org.springframework.integration.store.SimpleMessageStore"/>
+    <bean id="leiStoreService" class="biz.c24.io.lei.LeiStoreService"/>
+
+
+    <int:chain input-channel="lei-batch-message-processing-channel"
+               output-channel="lei-counter-service-channel">
+
+        <int:poller task-executor="leiBatchProcessingThreadPool"
+                    max-messages-per-poll="${lei.processor.max.messages.per.poll}"
+                    fixed-rate="${lei.processor.fixed.delay}" receive-timeout="0">
+            <int:transactional/>
+        </int:poller>
+        <int:service-activator ref="leiStoreService" method="store"/>
+    </int:chain>
+
+    <task:executor id="leiBatchProcessingThreadPool" pool-size="${lei.processor.thread.pool.size}"/>
+
+    <bean id="leiCounterService" class="biz.c24.io.monitor.ConcurrentCounterService"/>
+
+    <bean id="transactionManager" class="org.springframework.integration.transaction.PseudoTransactionManager"/>
+
+    <!-- ################# END INTEGRATION FLOW COMPONENTS ################# -->
+
+</beans>

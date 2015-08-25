@@ -1,0 +1,70 @@
+<!--
+ | Copyright 2015 C24 Technologies.
+ |
+ | Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+ | to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ | and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ |
+ | The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ |
+ | THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ | FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL C24 TECHNOLOGIES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ | WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ | SOFTWARE.
+ |
+-->
+<beans:beans xmlns="http://www.springframework.org/schema/integration"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:int="http://www.springframework.org/schema/integration"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context.xsd
+			http://www.springframework.org/schema/integration
+			http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+    <!-- ====================================================================== -->
+    <!-- Scan for any configuration classes-->
+    <!-- ====================================================================== -->
+    <context:component-scan base-package="biz.c24.io.configuration"/>
+
+
+    <!-- ====================================================================== -->
+    <!-- The Inbound Channel -->
+    <!-- ====================================================================== -->
+    <int:channel id="lei-file-polling-channel"/>
+
+    <!-- ====================================================================== -->
+    <!--  Read Directory -->
+    <!-- ====================================================================== -->
+    <beans:bean id="leiReadDirectory" class="java.io.File">
+        <beans:constructor-arg value="${lei.read.path}"/>
+    </beans:bean>
+
+    <!-- ====================================================================== -->
+    <!-- Place all messages that were successfully ingested and processed here -->
+    <!-- ====================================================================== -->
+    <beans:bean id="leiProcessedDirectory" class="java.io.File">
+        <beans:constructor-arg value="${lei.processed.path}"/>
+    </beans:bean>
+
+    <!-- ====================================================================== -->
+    <!-- Place any failed messages here -->
+    <!-- ====================================================================== -->
+    <beans:bean id="leiFailedDirectory" class="java.io.File">
+        <beans:constructor-arg value="${lei.failed.path}"/>
+    </beans:bean>
+
+    <int:channel id="lei-batch-handling-channel"/>
+
+    <!-- ====================================================================== -->
+    <!-- Gateway channel to send collections of Batch records to for processing-->
+    <!-- ====================================================================== -->
+    <int:channel id="lei-batch-message-processing-channel"/>
+
+    <int:channel id="lei-counter-service-channel"/>
+    <int:service-activator input-channel="lei-counter-service-channel" output-channel="nullChannel" ref="leiCounterService" method="count"/>
+
+</beans:beans>
