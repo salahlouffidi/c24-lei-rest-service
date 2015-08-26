@@ -10,9 +10,13 @@ import com.hazelcast.core.IMap;
 import org.plei.prelei_schema.xsd.LEIRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 
 @Component
@@ -20,14 +24,10 @@ public class LeiStoreService {
 
     Logger LOG = LoggerFactory.getLogger(LeiStoreService.class);
 
-    private HazelcastInstance hazelcast;
-    IMap<String, SimpleDataObject> map;
+    @Autowired
+    HazelcastInstance hazelcastInstance;
 
-    public LeiStoreService() {
-        Config config = new Config();
-        hazelcast = Hazelcast.newHazelcastInstance(config);
-        map = hazelcast.getMap("C24Cache");
-    }
+    IMap<String, SimpleDataObject> map;
 
     public Message<?> store(Message<?> message) throws IOException {
         LEIRegistration leiRegistration = (LEIRegistration) message.getPayload();
@@ -44,6 +44,17 @@ public class LeiStoreService {
             return false;
         }
         return true;
+    }
+
+    public LEIRegistration get(String leiIdentifier) {
+        Assert.notNull(leiIdentifier);
+        EntryView value = map.getEntryView(leiIdentifier);
+        
+    }
+
+    @PostConstruct
+    public void init() {
+        map = hazelcastInstance.getMap("leiCache");
     }
 
 
