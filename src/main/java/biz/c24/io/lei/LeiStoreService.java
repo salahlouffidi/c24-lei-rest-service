@@ -2,16 +2,14 @@ package biz.c24.io.lei;
 
 import biz.c24.io.api.C24;
 import biz.c24.io.api.data.SimpleDataObject;
-import com.hazelcast.config.Config;
+import biz.c24.io.lei.api.RegistrationNotFoundException;
 import com.hazelcast.core.EntryView;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import org.plei.prelei_schema.xsd.LEIRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -46,10 +44,15 @@ public class LeiStoreService {
         return true;
     }
 
-    public LEIRegistration get(String leiIdentifier) {
+    public org.plei.prelei_schema.xsd.sdo.LEIRegistration get(String leiIdentifier) {
         Assert.notNull(leiIdentifier);
         EntryView value = map.getEntryView(leiIdentifier);
-        
+        if(value ==null) {
+            throw new RegistrationNotFoundException(leiIdentifier);
+        } else {
+            return (org.plei.prelei_schema.xsd.sdo.LEIRegistration) value.getValue();
+        }
+
     }
 
     @PostConstruct
