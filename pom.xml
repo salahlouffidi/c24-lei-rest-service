@@ -26,8 +26,8 @@
         <c24.io.api.version>4.7.9</c24.io.api.version>
         <c24.io.studio.version>4.7.7</c24.io.studio.version>
         <c24.io.maven.version>4.7.1</c24.io.maven.version>
-        <spring.framework.version>4.3.18.RELEASE</spring.framework.version>
-        <spring.boot.version>1.2.1.RELEASE</spring.boot.version>
+        <spring.framework.version>4.3.19.RELEASE</spring.framework.version>
+        <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
         <spring.integration.version>4.1.2.RELEASE</spring.integration.version>
         <apache.commons-lang.version>2.6</apache.commons-lang.version>
         <hazelcast.version>3.5.1</hazelcast.version>
@@ -50,7 +50,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.2.4.RELEASE</version>
+        <version>1.5.13.RELEASE</version>
     </parent>
 
 
@@ -58,7 +58,7 @@
         <repository>
             <id>c24-nexus</id>
             <name>C24 Nexus</name>
-            <url>http://repo.c24io.net:8081/nexus/content/groups/public</url>
+            <url>https://downloads.c24tech.com/nexus/content/groups/public</url>
         </repository>
         <repository>
             <id>spring-releases</id>
@@ -71,7 +71,7 @@
         <pluginRepository>
             <id>c24-nexus</id>
             <name>C24 Nexus</name>
-            <url>http://repo.c24io.net:8081/nexus/content/groups/public</url>
+            <url>https://downloads.c24tech.com/nexus/content/groups/public</url>
         </pluginRepository>
     </pluginRepositories>
 
