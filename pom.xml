@@ -28,7 +28,7 @@
         <c24.io.maven.version>4.7.1</c24.io.maven.version>
         <spring.framework.version>4.3.19.RELEASE</spring.framework.version>
         <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
-        <spring.integration.version>4.1.2.RELEASE</spring.integration.version>
+        <spring.integration.version>4.3.19.RELEASE</spring.integration.version>
         <apache.commons-lang.version>2.6</apache.commons-lang.version>
         <hazelcast.version>3.5.1</hazelcast.version>
 
